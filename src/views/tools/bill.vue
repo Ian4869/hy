@@ -9,6 +9,7 @@
       type="file"
       accept=".xls, .xlsx"
     />
+    <Button type="primary" @click="excelDownLoad">导出excel</Button>
     <Table :columns="columns" :data="tableData" :height="600">
       <template slot="judgeNum" slot-scope="{ row, index }">
         {{ row.judgeNum }} {{ row.judgeNum == row.num ? "对" : "错" }}
@@ -38,6 +39,14 @@ export default {
           width: "80",
         },
         {
+          title: "日期",
+          key: "date",
+        },
+        {
+          title: "姓名",
+          key: "name",
+        },
+        {
           title: "数量",
           key: "num",
         },
@@ -47,7 +56,7 @@ export default {
         },
         {
           title: "总价",
-          key: "allprice",
+          key: "allPrice",
         },
         {
           title: "发票数量",
@@ -113,6 +122,8 @@ export default {
               num: Number(item.数量),
               price: Number(item.单价),
               allPrice: Number(item.总价),
+              date: item.日期,
+              name: item.姓名,
               num1: 0,
               price1: 0,
               num2: 0,
@@ -121,14 +132,14 @@ export default {
               judgeNum: 0,
               judgePrice: 0,
             };
-            let temp = vm.submit(tmpObj);
+            let temp = vm.handle(tmpObj);
             tmp.push(temp);
           });
           vm.tableData = tmp;
         }
       };
     },
-    submit(e) {
+    handle(e) {
       let tmp = e;
       let num1 = Math.floor(tmp.allPrice / 10000) + 1;
       let price1 = Math.ceil(tmp.allPrice / num1);
@@ -152,6 +163,9 @@ export default {
       tmp.judgePrice = ((num1 - 1) * price1 + price2).toFixed(0) - "";
       return tmp;
     },
+    excelDownLoad() {
+
+    }
   },
 
   watch: {},
