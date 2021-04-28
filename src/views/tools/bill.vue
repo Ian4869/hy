@@ -1,16 +1,23 @@
 <template>
   <div>
-    <Button type="primary" @click="excelUpload">上传excel</Button>
-    <input
-      style="display: none"
-      ref="fileInput"
-      @change="uploadExcel"
-      value="EXCEL导入"
-      type="file"
-      accept=".xls, .xlsx"
-    />
-    <Button type="primary" @click="excelDownLoad">导出excel</Button>
-    <Table :columns="columns" :data="tableData" :height="600">
+    <div style="margin: 10px 0 10px 0">
+      <Button type="primary" @click="excelUpload">上传excel</Button>
+      <input
+        style="display: none"
+        ref="fileInput"
+        @change="uploadExcel"
+        value="EXCEL导入"
+        type="file"
+        accept=".xls, .xlsx"
+      />
+      <Button type="primary" style="margin-left: 20px" @click="exportExcel"
+        >导出excel</Button
+      >
+      <Button type="primary" @click="tableData = []" style="margin-left: 20px"
+        >清空表格</Button
+      >
+    </div>
+    <Table :columns="columns" :data="tableData" :height="tableHeight">
       <template slot="judgeNum" slot-scope="{ row, index }">
         {{ row.judgeNum }} {{ row.judgeNum == row.num ? "对" : "错" }}
       </template>
@@ -24,6 +31,7 @@
 
 <script>
 import excel from "@/libs/excel";
+import arithmetic from "@/libs/arithmetic";
 export default {
   name: "",
   components: {},
@@ -87,12 +95,20 @@ export default {
           slot: "judgePrice",
         },
       ],
+      tableHeight: window.innerHeight - 100,
     };
   },
 
   computed: {},
 
-  mounted() {},
+  mounted() {
+    let vm = this
+    window.onresize = () => {
+      return (() => {
+        vm.tableHeight = window.innerHeight - 100;
+      })();
+    };
+  },
 
   methods: {
     excelUpload() {
@@ -136,36 +152,113 @@ export default {
             tmp.push(temp);
           });
           vm.tableData = tmp;
+          e.target.value = "";
         }
       };
     },
     handle(e) {
       let tmp = e;
-      let num1 = Math.floor(tmp.allPrice / 10000) + 1;
-      let price1 = Math.ceil(tmp.allPrice / num1);
+      let num1 = Math.floor(arithmetic.divide(tmp.allPrice, 10000)) + 1;
+      let price1 = Math.ceil(arithmetic.divide(tmp.allPrice, num1));
       // let price1 = parseInt((tmp.allPrice / num1).toFixed(1));
       // let num2 = Math.ceil((price1 / tmp.price * 10).toFixed(1)) / 10;
-      let num2 = Math.ceil(((price1 / tmp.price) * 10).toFixed(1)) / 10;
-      price1 = (num2 * tmp.price).toFixed(1) - "";
+      let num2 = arithmetic.divide(
+        Math.ceil(
+          arithmetic
+            .multiply(arithmetic.divide(price1, tmp.price), 10)
+            .toFixed(1)
+        ),
+        10
+      );
+      price1 = arithmetic.multiply(num2, tmp.price).toFixed(1) - "";
       if (price1 >= 10000) {
-        num2 = num2 - 0.1;
-        price1 = (num2 * tmp.price).toFixed(1) - "";
-        num1 = num1 + 1;
+        num2 = arithmetic.subtract(num2, 0.1);
+        price1 = arithmetic.multiply(num2, tmp.price).toFixed(1) - "";
+        num1 = arithmetic.add(num1, 1);
       }
-      let price2 = (tmp.allPrice - (num1 - 1) * price1).toFixed(1) - "";
-      let num3 = (tmp.num - (num1 - 1) * num2).toFixed(2) - "";
+      let price2 =
+        arithmetic
+          .subtract(
+            tmp.allPrice,
+            arithmetic.multiply(arithmetic.subtract(num1, 1), price1)
+          )
+          .toFixed(1) - "";
+      let num3 =
+        arithmetic
+          .subtract(
+            tmp.num,
+            arithmetic.multiply(arithmetic.subtract(num1, 1), num2)
+          )
+          .toFixed(2) - "";
       tmp.num1 = num1;
       tmp.price1 = price1;
       tmp.num2 = num2;
       tmp.price2 = price2;
       tmp.num3 = num3;
-      tmp.judgeNum = ((num1 - 1) * num2 + num3).toFixed(2) - "";
-      tmp.judgePrice = ((num1 - 1) * price1 + price2).toFixed(0) - "";
+      tmp.judgeNum =
+        arithmetic
+          .add(arithmetic.multiply(arithmetic.subtract(num1, 1), num2), num3)
+          .toFixed(2) - "";
+      tmp.judgePrice =
+        arithmetic
+          .add(
+            arithmetic.multiply(arithmetic.subtract(num1, 1), price1),
+            price2
+          )
+          .toFixed(0) - "";
       return tmp;
     },
-    excelDownLoad() {
-
-    }
+    exportExcel() {
+      if (this.tableData == null || this.tableData.length == 0) {
+        this.$Message.error("导出内容为空");
+        return;
+      }
+      let exportInfo = [];
+      this.tableData.forEach((item) => {
+        exportInfo.push({
+          date: item.date,
+          name: item.name,
+          num: item.num,
+          price: item.price,
+          allPrice: item.allPrice,
+          num1: item.num1,
+          price1: item.price1,
+          num2: item.num2,
+          price2: item.price2,
+          num3: item.num3,
+        });
+      });
+      const params = {
+        title: [
+          "日期",
+          "姓名",
+          "数量",
+          "单价",
+          "总价",
+          "发票数量",
+          "重复发票金额",
+          "重复单张发票货物数量",
+          "单独发票金额",
+          "单独单张发票货物数量"
+        ],
+        key: [
+          "date",
+          "name",
+          "num",
+          "price",
+          "allPrice",
+          "num1",
+          "price1",
+          "num2",
+          "price2",
+          "num3"
+        ],
+        data: exportInfo,
+        autoWidth: true,
+        filename: "开票",
+      };
+      excel.export_array_to_excel(params);
+    },
   },
 
   watch: {},
