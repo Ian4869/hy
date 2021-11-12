@@ -6,6 +6,7 @@ import iView from 'iview'
 import config from '@/config'
 import installPlugin from '@/plugin'
 import './index.less'
+import '../public/common.less'
 Vue.use(iView, {
   
 })

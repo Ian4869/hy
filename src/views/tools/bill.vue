@@ -1,5 +1,18 @@
 <template>
   <div>
+    <div class="flex-center-center mt-20">
+      <div>时间差计算器：</div>
+      <Time-picker
+        v-model="time"
+        confirm
+        type="timerange"
+        placement="bottom-end"
+        placeholder="选择时间"
+        style="width: 168px"
+        @on-ok="timeChange"
+      ></Time-picker>
+      <div class="ml-20">结果：{{ result }}</div>
+    </div>
     <div style="margin: 10px 0 10px 0">
       <Button type="primary" @click="excelUpload">上传excel</Button>
       <input
@@ -96,13 +109,15 @@ export default {
         },
       ],
       tableHeight: window.innerHeight - 100,
+      time: null,
+      result: "",
     };
   },
 
   computed: {},
 
   mounted() {
-    let vm = this
+    let vm = this;
     window.onresize = () => {
       return (() => {
         vm.tableHeight = window.innerHeight - 100;
@@ -239,7 +254,7 @@ export default {
           "重复发票金额",
           "重复单张发票货物数量",
           "单独发票金额",
-          "单独单张发票货物数量"
+          "单独单张发票货物数量",
         ],
         key: [
           "date",
@@ -251,13 +266,23 @@ export default {
           "price1",
           "num2",
           "price2",
-          "num3"
+          "num3",
         ],
         data: exportInfo,
         autoWidth: true,
         filename: "开票",
       };
       excel.export_array_to_excel(params);
+    },
+    timeChange() {
+      console.log(this.time);
+      let ta = "2021-11-11 " + this.time[0];
+      let tb = "2021-11-11 " + this.time[1];
+      let da = new Date(ta).getTime();
+      let db = new Date(tb).getTime();
+      let c = (db - da) / 1000 / 60;
+      console.log(`分钟:${c.toFixed(0)},小时:${(c / 60).toFixed(1)}`);
+      this.result = `分钟:${c.toFixed(0)},小时:${(c / 60).toFixed(1)}`;
     },
   },
 
