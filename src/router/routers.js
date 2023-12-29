@@ -13,9 +13,16 @@ export default [{
         name: 'index',
         meta: {title:'首页'},
         component: () => import('../views/Home.vue')
-      }
+      },
+
     ],
   },
+  {
+    path: '/judge',
+    name: 'judge',
+    meta: {title:'判断'},
+    component: () => import('../views/tools/judge.vue')
+  }
 ]
 
 // const router = new VueRouter({

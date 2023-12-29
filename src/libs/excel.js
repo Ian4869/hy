@@ -42,12 +42,12 @@ function fixdata(data) {
 }
 
 // get head from excel file,return array
-function get_header_row(sheet) {
+function get_header_row(sheet, row) {
     const headers = []
     const range = XLSX.utils.decode_range(sheet['!ref'])
     let C
     // debugger
-    const R = range.s.r/* start in the first row */
+    const R = range.s.r + row/* start in the first row */
     for (C = range.s.c; C <= range.e.c; ++C) { /* walk every column in the range */
         var cell = sheet[XLSX.utils.encode_cell({ c: C, r: R })] /* find the cell in the first row */
         var hdr = 'UNKNOWN ' + C // <-- replace with your desired default
@@ -94,15 +94,14 @@ export const export_array_to_excel = ({key, data, title, filename, autoWidth}) =
     XLSX.writeFile(wb, filename + '.xlsx');
 }
 
-export const read = (data, type) => {
+export const read = (data, type, index=0, row=0) => {
     /* if type == 'base64' must fix data first */
     // const fixedData = fixdata(data)
     // const workbook = XLSX.read(btoa(fixedData), { type: 'base64' })
     const workbook = XLSX.read(data, { type: type });
-    const firstSheetName = workbook.SheetNames[0];
-    // debugger
+    const firstSheetName = workbook.SheetNames[index];
     const worksheet = workbook.Sheets[firstSheetName];
-    const header = get_header_row(worksheet);
+    const header = get_header_row(worksheet,row);
     const results = XLSX.utils.sheet_to_json(worksheet);
     return {header, results};
 }
